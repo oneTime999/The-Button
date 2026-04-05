@@ -23,53 +23,73 @@ local targetNames = {
     "Three Blade Warrior"
 }
 
--- Cores de raridade
+-- ============================================================
+-- LIMPAR VIP (executa 1x ao iniciar)
+-- ============================================================
+task.spawn(function()
+    local success, err = pcall(function()
+        local vip = Workspace:WaitForChild("Zones", 10)
+        if vip then
+            local vipFolder = vip:WaitForChild("Vip", 5)
+            if vipFolder then
+                for _, child in ipairs(vipFolder:GetChildren()) do
+                    child:Destroy()
+                end
+            end
+        end
+    end)
+    if not success then
+        warn("VIP clear falhou: " .. tostring(err))
+    end
+end)
+
+-- ============================================================
+-- RARIDADES REAIS DO JOGO
+-- ============================================================
 local RARITY_COLORS = {
-    Common    = Color3.fromRGB(200, 200, 200), -- Cinza claro
-    Uncommon  = Color3.fromRGB(100, 220, 100), -- Verde
-    Rare      = Color3.fromRGB(80,  150, 255), -- Azul
-    Epic      = Color3.fromRGB(180, 80,  255), -- Roxo
-    Legendary = Color3.fromRGB(255, 165, 0),   -- Laranja
-    Mythic    = Color3.fromRGB(255, 50,  80),  -- Vermelho/Rosa
+    OG        = Color3.fromRGB(255, 215, 0),   -- Dourado
+    Cosmic    = Color3.fromRGB(0,   220, 255), -- Ciano
+    Legendary = Color3.fromRGB(255, 120, 0),   -- Laranja
+    Mythic    = Color3.fromRGB(220, 50,  255), -- Roxo vibrante
 }
 
--- Raridade de cada boss
 local bossRarity = {
-    ["Hero Marine"]        = "Common",
-    ["Hawk Swordsman"]     = "Common",
-    ["Grass Admiral"]      = "Common",
-    ["Giraffe Agent"]      = "Common",
-    ["Black Leg Fighter"]  = "Common",
+    -- OG
+    ["Buddha Admiral"]     = "OG",
+    ["Earthquake Titan"]   = "OG",
+    ["Hero Marine"]        = "OG",
+    ["Pirate King"]        = "OG",
 
-    ["Flame Chief"]        = "Uncommon",
-    ["Sun Warrior"]        = "Uncommon",
-    ["Boiling Samurai"]    = "Uncommon",
-    ["Leopard Assassin"]   = "Uncommon",
-    ["Surgeon Pirate"]     = "Uncommon",
+    -- Cosmic
+    ["Dark Emperor"]       = "Cosmic",
+    ["Dragon Emperor"]     = "Cosmic",
+    ["Hawk Swordsman"]     = "Cosmic",
+    ["Magma Admiral"]      = "Cosmic",
+    ["Red Emperor"]        = "Cosmic",
+    ["Soul Empress"]       = "Cosmic",
+    ["Sun Warrior"]        = "Cosmic",
 
-    ["Magma Admiral"]      = "Rare",
-    ["Buddha Admiral"]     = "Rare",
-    ["Red Emperor"]        = "Rare",
-    ["Dark King"]          = "Rare",
-    ["Three Blade Warrior"]= "Rare",
+    -- Legendary
+    ["Flame Chief"]        = "Legendary",
+    ["Giraffe Agent"]      = "Legendary",
+    ["Grass Admiral"]      = "Legendary",
+    ["Leopard Assassin"]   = "Legendary",
+    ["Seraph Hawk"]        = "Legendary",
+    ["Wildfire King"]      = "Legendary",
 
-    ["Earthquake Titan"]   = "Epic",
-    ["Wildfire King"]      = "Epic",
-    ["Gravity Admiral"]    = "Epic",
-    ["Light Admiral"]      = "Epic",
-    ["Seraph Hawk"]        = "Epic",
-
-    ["Pirate King"]        = "Legendary",
-    ["Dragon Emperor"]     = "Legendary",
-    ["Soul Empress"]       = "Legendary",
-    ["Dark Emperor"]       = "Legendary",
-
+    -- Mythic
+    ["Black Leg Fighter"]  = "Mythic",
+    ["Boiling Samurai"]    = "Mythic",
+    ["Dark King"]          = "Mythic",
     ["Elder Demon"]        = "Mythic",
+    ["Gravity Admiral"]    = "Mythic",
+    ["Light Admiral"]      = "Mythic",
+    ["Surgeon Pirate"]     = "Mythic",
+    ["Three Blade Warrior"]= "Mythic",
 }
 
--- Função auxiliar: retorna a cor da raridade do boss
 local function getRarityColor(bossName)
-    local rarity = bossRarity[bossName] or "Common"
+    local rarity = bossRarity[bossName] or "Legendary"
     return RARITY_COLORS[rarity], rarity
 end
 
