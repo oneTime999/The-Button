@@ -11,10 +11,12 @@ local Window = Rayfield:CreateWindow({
 })
 
 local ESPTab = Window:CreateTab("Esp", "Eye")
+local AimTab = Window:CreateTab("Aim", "Crosshair")
 local MiscTab = Window:CreateTab("Misc", "Settings")
 
 local players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
 
 local plr = players.LocalPlayer
 local char = plr.Character or plr.CharacterAdded:Wait()
@@ -176,6 +178,83 @@ ESPTab:CreateToggle({
                 playerESPUpdate:Disconnect()
                 playerESPUpdate = nil
             end
+        end
+    end
+})
+
+local aimTarget = nil
+local aimEnabled = false
+local aimConnection = nil
+local originalCameraType = camera.CameraType
+local originalCameraSubject = camera.CameraSubject
+
+local function getPlayerList()
+    local list = {}
+    for _, p in pairs(players:GetPlayers()) do
+        if p ~= plr then
+            table.insert(list, p.Name)
+        end
+    end
+    if #list == 0 then
+        table.insert(list, "No players")
+    end
+    return list
+end
+
+local playerList = getPlayerList()
+
+local AimDropdown = AimTab:CreateDropdown({
+    Name = "Select Player",
+    Options = playerList,
+    CurrentOption = playerList[1],
+    Flag = "AimTarget",
+    Callback = function(value)
+        aimTarget = value
+    end
+})
+
+aimTarget = playerList[1]
+
+players.PlayerAdded:Connect(function()
+    local updated = getPlayerList()
+    AimDropdown:Refresh(updated, updated[1])
+end)
+
+players.PlayerRemoving:Connect(function()
+    local updated = getPlayerList()
+    AimDropdown:Refresh(updated, updated[1])
+end)
+
+AimTab:CreateToggle({
+    Name = "Camera Lock (Head)",
+    CurrentValue = false,
+    Flag = "AimLock",
+    Callback = function(value)
+        aimEnabled = value
+        if value then
+            originalCameraType = camera.CameraType
+            originalCameraSubject = camera.CameraSubject
+            camera.CameraType = Enum.CameraType.Scriptable
+
+            aimConnection = RunService.RenderStepped:Connect(function()
+                if not aimEnabled then return end
+                local target = players:FindFirstChild(aimTarget)
+                if target and target.Character then
+                    local head = target.Character:FindFirstChild("Head")
+                    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                    if head and rootPart then
+                        local direction = (head.Position - rootPart.Position).Unit
+                        camera.CFrame = CFrame.new(rootPart.Position + Vector3.new(0, 1.5, 0), head.Position)
+                    end
+                end
+            end)
+        else
+            if aimConnection then
+                aimConnection:Disconnect()
+                aimConnection = nil
+            end
+            camera.CameraType = Enum.CameraType.Custom
+            camera.CameraSubject = plr.Character and plr.Character:FindFirstChildWhichIsA("Humanoid")
         end
     end
 })
