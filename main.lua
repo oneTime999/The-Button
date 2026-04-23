@@ -67,7 +67,7 @@ local function createESP(obj)
 
     local highlight = Instance.new("Highlight")
     highlight.Name = "ToolHighlight"
-    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    highlight.FillColor = Color3.fromRGB(255, 255, 0)
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
     highlight.OutlineTransparency = 1
     highlight.FillTransparency = 0.7
