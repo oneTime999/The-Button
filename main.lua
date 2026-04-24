@@ -4,7 +4,7 @@ local Window = Rayfield:CreateWindow({
     Name = "Slow Hub",
     Icon = 0,
     LoadingTitle = "Slow Hub",
-    LoadingSubtitle = "by oneTime.999",
+    LoadingSubtitle = "by Slow Hub Team",
     Theme = "Default",
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false,
@@ -195,19 +195,19 @@ local function createZombieESP(model)
     highlight.Parent = folder
 end
 
-local function createProjectAlphaESP(model)
+local function createProjectBetaESP(model)
     if not model:IsA("Model") then return end
-    if model:FindFirstChild("ProjectAlphaESP_Folder") then return end
+    if model:FindFirstChild("ProjectBetaESP_Folder") then return end
 
     local hrp = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChildWhichIsA("BasePart")
     if not hrp then return end
 
     local folder = Instance.new("Folder")
-    folder.Name = "ProjectAlphaESP_Folder"
+    folder.Name = "ProjectBetaESP_Folder"
     folder.Parent = model
 
     local bgui = Instance.new("BillboardGui")
-    bgui.Name = "ProjectAlphaNameESP"
+    bgui.Name = "ProjectBetaNameESP"
     bgui.Size = UDim2.new(0, 200, 0, 50)
     bgui.StudsOffset = Vector3.new(0, 4, 0)
     bgui.Enabled = true
@@ -221,11 +221,11 @@ local function createProjectAlphaESP(model)
     text.TextColor3 = Color3.fromRGB(0, 0, 0)
     text.TextStrokeTransparency = 0
     text.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
-    text.Text = "[ALPHA] " .. model.Name
+    text.Text = "[BETA] " .. model.Name
     text.Parent = bgui
 
     local highlight = Instance.new("Highlight")
-    highlight.Name = "ProjectAlphaHighlight"
+    highlight.Name = "ProjectBetaHighlight"
     highlight.FillColor = Color3.fromRGB(0, 0, 0)
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
     highlight.OutlineTransparency = 1
@@ -242,11 +242,11 @@ local function scanZombies()
     end
 end
 
-local function scanProjectAlpha()
-    local folder = workspace:FindFirstChild("Project Alpha")
+local function scanProjectBeta()
+    local folder = workspace:FindFirstChild("Project Beta")
     if not folder then return end
     for _, child in pairs(folder:GetChildren()) do
-        createProjectAlphaESP(child)
+        createProjectBetaESP(child)
     end
 end
 
@@ -259,20 +259,20 @@ local function clearZombieESP()
     end
 end
 
-local function clearProjectAlphaESP()
-    local folder = workspace:FindFirstChild("Project Alpha")
+local function clearProjectBetaESP()
+    local folder = workspace:FindFirstChild("Project Beta")
     if not folder then return end
     for _, child in pairs(folder:GetChildren()) do
-        local esp = child:FindFirstChild("ProjectAlphaESP_Folder")
+        local esp = child:FindFirstChild("ProjectBetaESP_Folder")
         if esp then esp:Destroy() end
     end
 end
 
 local playerESPUpdate = nil
 local ZombieESPUpdate = nil
-local ProjectAlphaESPUpdate = nil
+local ProjectBetaESPUpdate = nil
 local ZombieChildAdded = nil
-local ProjectAlphaChildAdded = nil
+local ProjectBetaChildAdded = nil
 
 ESPTab:CreateToggle({
     Name = "Items ESP",
@@ -375,42 +375,42 @@ ESPTab:CreateToggle({
 })
 
 ESPTab:CreateToggle({
-    Name = "Project Alpha ESP",
+    Name = "Project Beta ESP",
     CurrentValue = false,
-    Flag = "ProjectAlphaESP",
+    Flag = "ProjectBetaESP",
     Callback = function(value)
         if value then
-            scanProjectAlpha()
-            local folder = workspace:FindFirstChild("Project Alpha")
+            scanProjectBeta()
+            local folder = workspace:FindFirstChild("Project Beta")
             if folder then
-                if ProjectAlphaChildAdded then ProjectAlphaChildAdded:Disconnect() end
-                ProjectAlphaChildAdded = folder.ChildAdded:Connect(createProjectAlphaESP)
+                if ProjectBetaChildAdded then ProjectBetaChildAdded:Disconnect() end
+                ProjectBetaChildAdded = folder.ChildAdded:Connect(createProjectBetaESP)
             end
-            if ProjectAlphaESPUpdate then ProjectAlphaESPUpdate:Disconnect() end
-            ProjectAlphaESPUpdate = RunService.Heartbeat:Connect(function()
-                local f = workspace:FindFirstChild("Project Alpha")
+            if ProjectBetaESPUpdate then ProjectBetaESPUpdate:Disconnect() end
+            ProjectBetaESPUpdate = RunService.Heartbeat:Connect(function()
+                local f = workspace:FindFirstChild("Project Beta")
                 if not f then return end
                 for _, model in pairs(f:GetChildren()) do
-                    if model:FindFirstChild("ProjectAlphaESP_Folder") then
-                        local espFolder = model:FindFirstChild("ProjectAlphaESP_Folder")
-                        local bgui = espFolder:FindFirstChild("ProjectAlphaNameESP")
+                    if model:FindFirstChild("ProjectBetaESP_Folder") then
+                        local espFolder = model:FindFirstChild("ProjectBetaESP_Folder")
+                        local bgui = espFolder:FindFirstChild("ProjectBetaNameESP")
                         local text = bgui and bgui:FindFirstChildWhichIsA("TextLabel")
                         local humanoid = model:FindFirstChildWhichIsA("Humanoid")
                         if text and humanoid then
-                            text.Text = "[ALPHA] " .. model.Name .. " : " .. tostring(math.floor(humanoid.Health))
+                            text.Text = "[BETA] " .. model.Name .. " : " .. tostring(math.floor(humanoid.Health))
                         end
                     end
                 end
             end)
         else
-            clearProjectAlphaESP()
-            if ProjectAlphaChildAdded then
-                ProjectAlphaChildAdded:Disconnect()
-                ProjectAlphaChildAdded = nil
+            clearProjectBetaESP()
+            if ProjectBetaChildAdded then
+                ProjectBetaChildAdded:Disconnect()
+                ProjectBetaChildAdded = nil
             end
-            if ProjectAlphaESPUpdate then
-                ProjectAlphaESPUpdate:Disconnect()
-                ProjectAlphaESPUpdate = nil
+            if ProjectBetaESPUpdate then
+                ProjectBetaESPUpdate:Disconnect()
+                ProjectBetaESPUpdate = nil
             end
         end
     end
