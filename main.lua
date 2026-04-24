@@ -4,7 +4,7 @@ local Window = Rayfield:CreateWindow({
     Name = "Slow Hub",
     Icon = 0,
     LoadingTitle = "Slow Hub",
-    LoadingSubtitle = "by Slow Hub Team",
+    LoadingSubtitle = "by oneTime.999",
     Theme = "Default",
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false,
@@ -195,6 +195,44 @@ local function createZombieESP(model)
     highlight.Parent = folder
 end
 
+local function createProjectDeltaESP(model)
+    if not model:IsA("Model") then return end
+    if model:FindFirstChild("ProjectDeltaESP_Folder") then return end
+
+    local hrp = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChildWhichIsA("BasePart")
+    if not hrp then return end
+
+    local folder = Instance.new("Folder")
+    folder.Name = "ProjectDeltaESP_Folder"
+    folder.Parent = model
+
+    local bgui = Instance.new("BillboardGui")
+    bgui.Name = "ProjectDeltaNameESP"
+    bgui.Size = UDim2.new(0, 200, 0, 50)
+    bgui.StudsOffset = Vector3.new(0, 4, 0)
+    bgui.Enabled = true
+    bgui.AlwaysOnTop = true
+    bgui.Adornee = hrp
+    bgui.Parent = folder
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.fromRGB(255, 0, 255)
+    text.TextStrokeTransparency = 0
+    text.Text = "[DELTA] " .. model.Name
+    text.Parent = bgui
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ProjectDeltaHighlight"
+    highlight.FillColor = Color3.fromRGB(255, 0, 255)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 1
+    highlight.FillTransparency = 0.7
+    highlight.Adornee = model
+    highlight.Parent = folder
+end
+
 local function createProjectBetaESP(model)
     if not model:IsA("Model") then return end
     if model:FindFirstChild("ProjectBetaESP_Folder") then return end
@@ -234,11 +272,57 @@ local function createProjectBetaESP(model)
     highlight.Parent = folder
 end
 
+local function createProjectAlphaESP(model)
+    if not model:IsA("Model") then return end
+    if model:FindFirstChild("ProjectAlphaESP_Folder") then return end
+
+    local hrp = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChildWhichIsA("BasePart")
+    if not hrp then return end
+
+    local folder = Instance.new("Folder")
+    folder.Name = "ProjectAlphaESP_Folder"
+    folder.Parent = model
+
+    local bgui = Instance.new("BillboardGui")
+    bgui.Name = "ProjectAlphaNameESP"
+    bgui.Size = UDim2.new(0, 200, 0, 50)
+    bgui.StudsOffset = Vector3.new(0, 4, 0)
+    bgui.Enabled = true
+    bgui.AlwaysOnTop = true
+    bgui.Adornee = hrp
+    bgui.Parent = folder
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.fromRGB(255, 165, 0)
+    text.TextStrokeTransparency = 0
+    text.Text = "[ALPHA] " .. model.Name
+    text.Parent = bgui
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ProjectAlphaHighlight"
+    highlight.FillColor = Color3.fromRGB(255, 165, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 1
+    highlight.FillTransparency = 0.7
+    highlight.Adornee = model
+    highlight.Parent = folder
+end
+
 local function scanZombies()
     local folder = workspace:FindFirstChild("Zombies")
     if not folder then return end
     for _, child in pairs(folder:GetChildren()) do
         createZombieESP(child)
+    end
+end
+
+local function scanProjectDelta()
+    local folder = workspace:FindFirstChild("Project Delta")
+    if not folder then return end
+    for _, child in pairs(folder:GetChildren()) do
+        createProjectDeltaESP(child)
     end
 end
 
@@ -250,11 +334,28 @@ local function scanProjectBeta()
     end
 end
 
+local function scanProjectAlpha()
+    local folder = workspace:FindFirstChild("Project Alpha")
+    if not folder then return end
+    for _, child in pairs(folder:GetChildren()) do
+        createProjectAlphaESP(child)
+    end
+end
+
 local function clearZombieESP()
     local folder = workspace:FindFirstChild("Zombies")
     if not folder then return end
     for _, child in pairs(folder:GetChildren()) do
         local esp = child:FindFirstChild("ZombieESP_Folder")
+        if esp then esp:Destroy() end
+    end
+end
+
+local function clearProjectDeltaESP()
+    local folder = workspace:FindFirstChild("Project Delta")
+    if not folder then return end
+    for _, child in pairs(folder:GetChildren()) do
+        local esp = child:FindFirstChild("ProjectDeltaESP_Folder")
         if esp then esp:Destroy() end
     end
 end
@@ -268,11 +369,20 @@ local function clearProjectBetaESP()
     end
 end
 
+local function clearProjectAlphaESP()
+    local folder = workspace:FindFirstChild("Project Alpha")
+    if not folder then return end
+    for _, child in pairs(folder:GetChildren()) do
+        local esp = child:FindFirstChild("ProjectAlphaESP_Folder")
+        if esp then esp:Destroy() end
+    end
+end
+
 local playerESPUpdate = nil
 local ZombieESPUpdate = nil
+local ProjectDeltaESPUpdate = nil
 local ProjectBetaESPUpdate = nil
-local ZombieChildAdded = nil
-local ProjectBetaChildAdded = nil
+local ProjectAlphaESPUpdate = nil
 
 ESPTab:CreateToggle({
     Name = "Items ESP",
@@ -339,13 +449,9 @@ ESPTab:CreateToggle({
     Callback = function(value)
         if value then
             scanZombies()
-            local folder = workspace:FindFirstChild("Zombies")
-            if folder then
-                if ZombieChildAdded then ZombieChildAdded:Disconnect() end
-                ZombieChildAdded = folder.ChildAdded:Connect(createZombieESP)
-            end
             if ZombieESPUpdate then ZombieESPUpdate:Disconnect() end
             ZombieESPUpdate = RunService.Heartbeat:Connect(function()
+                scanZombies()
                 local f = workspace:FindFirstChild("Zombies")
                 if not f then return end
                 for _, model in pairs(f:GetChildren()) do
@@ -362,13 +468,43 @@ ESPTab:CreateToggle({
             end)
         else
             clearZombieESP()
-            if ZombieChildAdded then
-                ZombieChildAdded:Disconnect()
-                ZombieChildAdded = nil
-            end
             if ZombieESPUpdate then
                 ZombieESPUpdate:Disconnect()
                 ZombieESPUpdate = nil
+            end
+        end
+    end
+})
+
+ESPTab:CreateToggle({
+    Name = "Project Delta ESP",
+    CurrentValue = false,
+    Flag = "ProjectDeltaESP",
+    Callback = function(value)
+        if value then
+            scanProjectDelta()
+            if ProjectDeltaESPUpdate then ProjectDeltaESPUpdate:Disconnect() end
+            ProjectDeltaESPUpdate = RunService.Heartbeat:Connect(function()
+                scanProjectDelta()
+                local f = workspace:FindFirstChild("Project Delta")
+                if not f then return end
+                for _, model in pairs(f:GetChildren()) do
+                    if model:FindFirstChild("ProjectDeltaESP_Folder") then
+                        local espFolder = model:FindFirstChild("ProjectDeltaESP_Folder")
+                        local bgui = espFolder:FindFirstChild("ProjectDeltaNameESP")
+                        local text = bgui and bgui:FindFirstChildWhichIsA("TextLabel")
+                        local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+                        if text and humanoid then
+                            text.Text = "[DELTA] " .. model.Name .. " : " .. tostring(math.floor(humanoid.Health))
+                        end
+                    end
+                end
+            end)
+        else
+            clearProjectDeltaESP()
+            if ProjectDeltaESPUpdate then
+                ProjectDeltaESPUpdate:Disconnect()
+                ProjectDeltaESPUpdate = nil
             end
         end
     end
@@ -381,13 +517,9 @@ ESPTab:CreateToggle({
     Callback = function(value)
         if value then
             scanProjectBeta()
-            local folder = workspace:FindFirstChild("Project Beta")
-            if folder then
-                if ProjectBetaChildAdded then ProjectBetaChildAdded:Disconnect() end
-                ProjectBetaChildAdded = folder.ChildAdded:Connect(createProjectBetaESP)
-            end
             if ProjectBetaESPUpdate then ProjectBetaESPUpdate:Disconnect() end
             ProjectBetaESPUpdate = RunService.Heartbeat:Connect(function()
+                scanProjectBeta()
                 local f = workspace:FindFirstChild("Project Beta")
                 if not f then return end
                 for _, model in pairs(f:GetChildren()) do
@@ -404,13 +536,43 @@ ESPTab:CreateToggle({
             end)
         else
             clearProjectBetaESP()
-            if ProjectBetaChildAdded then
-                ProjectBetaChildAdded:Disconnect()
-                ProjectBetaChildAdded = nil
-            end
             if ProjectBetaESPUpdate then
                 ProjectBetaESPUpdate:Disconnect()
                 ProjectBetaESPUpdate = nil
+            end
+        end
+    end
+})
+
+ESPTab:CreateToggle({
+    Name = "Project Alpha ESP",
+    CurrentValue = false,
+    Flag = "ProjectAlphaESP",
+    Callback = function(value)
+        if value then
+            scanProjectAlpha()
+            if ProjectAlphaESPUpdate then ProjectAlphaESPUpdate:Disconnect() end
+            ProjectAlphaESPUpdate = RunService.Heartbeat:Connect(function()
+                scanProjectAlpha()
+                local f = workspace:FindFirstChild("Project Alpha")
+                if not f then return end
+                for _, model in pairs(f:GetChildren()) do
+                    if model:FindFirstChild("ProjectAlphaESP_Folder") then
+                        local espFolder = model:FindFirstChild("ProjectAlphaESP_Folder")
+                        local bgui = espFolder:FindFirstChild("ProjectAlphaNameESP")
+                        local text = bgui and bgui:FindFirstChildWhichIsA("TextLabel")
+                        local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+                        if text and humanoid then
+                            text.Text = "[ALPHA] " .. model.Name .. " : " .. tostring(math.floor(humanoid.Health))
+                        end
+                    end
+                end
+            end)
+        else
+            clearProjectAlphaESP()
+            if ProjectAlphaESPUpdate then
+                ProjectAlphaESPUpdate:Disconnect()
+                ProjectAlphaESPUpdate = nil
             end
         end
     end
