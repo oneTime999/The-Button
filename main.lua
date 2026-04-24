@@ -1,3 +1,146 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ManualFireUI"
+ScreenGui.Parent = CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 250, 0, 320)
+MainFrame.Active = true
+
+local Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Manual Fire"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+
+local WeaponInput = Instance.new("TextBox")
+WeaponInput.Parent = MainFrame
+WeaponInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+WeaponInput.BorderSizePixel = 0
+WeaponInput.Position = UDim2.new(0.05, 0, 0.13, 0)
+WeaponInput.Size = UDim2.new(0.9, 0, 0, 30)
+WeaponInput.Font = Enum.Font.Gotham
+WeaponInput.Text = "AK-74M"
+WeaponInput.PlaceholderText = "Weapon Name..."
+WeaponInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+WeaponInput.TextSize = 14
+
+local RefreshButton = Instance.new("TextButton")
+RefreshButton.Parent = MainFrame
+RefreshButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+RefreshButton.BorderSizePixel = 0
+RefreshButton.Position = UDim2.new(0.05, 0, 0.25, 0)
+RefreshButton.Size = UDim2.new(0.9, 0, 0, 30)
+RefreshButton.Font = Enum.Font.Gotham
+RefreshButton.Text = "Refresh Players"
+RefreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RefreshButton.TextSize = 13
+
+local PlayerList = Instance.new("ScrollingFrame")
+PlayerList.Parent = MainFrame
+PlayerList.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+PlayerList.BorderSizePixel = 0
+PlayerList.Position = UDim2.new(0.05, 0, 0.38, 0)
+PlayerList.Size = UDim2.new(0.9, 0, 0, 130)
+PlayerList.ScrollBarThickness = 3
+PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Parent = PlayerList
+ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ListLayout.Padding = UDim.new(0, 4)
+
+local FireButton = Instance.new("TextButton")
+FireButton.Parent = MainFrame
+FireButton.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+FireButton.BorderSizePixel = 0
+FireButton.Position = UDim2.new(0.05, 0, 0.83, 0)
+FireButton.Size = UDim2.new(0.9, 0, 0, 45)
+FireButton.Font = Enum.Font.GothamBold
+FireButton.Text = "FIRE"
+FireButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FireButton.TextSize = 20
+
+local Dragging, DragInput, DragStart, StartPos
+Title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        Dragging = true
+        DragStart = input.Position
+        StartPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then Dragging = false end
+        end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local Delta = input.Position - DragStart
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
+    end
+end)
+
+local TargetPlayer = nil
+
+local function PopulateList()
+    for _, child in ipairs(PlayerList:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local PlayerBtn = Instance.new("TextButton")
+            PlayerBtn.Parent = PlayerList
+            PlayerBtn.Size = UDim2.new(1, 0, 0, 25)
+            PlayerBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            PlayerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            PlayerBtn.Font = Enum.Font.Gotham
+            PlayerBtn.TextSize = 12
+            PlayerBtn.Text = player.Name
+            PlayerBtn.BorderSizePixel = 0
+            
+            PlayerBtn.MouseButton1Click:Connect(function()
+                TargetPlayer = player
+                for _, btn in ipairs(PlayerList:GetChildren()) do
+                    if btn:IsA("TextButton") then btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35) end
+                end
+                PlayerBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            end)
+        end
+    end
+end
+
+PopulateList()
+RefreshButton.MouseButton1Click:Connect(PopulateList)
+
+FireButton.MouseButton1Click:Connect(function()
+    if TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("Head") then
+        local WeaponName = WeaponInput.Text
+        local Weapon = LocalPlayer.Backpack:FindFirstChild(WeaponName) or LocalPlayer.Character:FindFirstChild(WeaponName)
+        
+        if Weapon and Weapon:FindFirstChild("Fire") then
+            local args = {
+                [1] = true,
+                [2] = TargetPlayer.Character.Head.Position,
+                [3] = false,
+                [4] = 12,
+            }
+            Weapon.Fire:FireServer(unpack(args))
+        end
+    end
+end)
+
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
