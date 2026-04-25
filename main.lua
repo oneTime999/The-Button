@@ -685,7 +685,6 @@ local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- Criando a Interface Principal
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DirectHitUI"
 ScreenGui.Parent = CoreGui
@@ -695,8 +694,8 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -160)
-MainFrame.Size = UDim2.new(0, 250, 0, 360)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 260, 0, 420)
 MainFrame.Active = true
 MainFrame.Visible = true
 
@@ -717,14 +716,13 @@ local TitleCorner = Instance.new("UICorner")
 TitleCorner.CornerRadius = UDim.new(0, 8)
 TitleCorner.Parent = Title
 
--- Lista de Armas baseada na sua imagem
 local WeaponList = {"AK-74M", "AS-VAL", "CS5", "L106", "M27", "M4A1", "Minigun"}
 local SelectedWeapon = WeaponList[1]
 
 local WeaponScroll = Instance.new("ScrollingFrame")
 WeaponScroll.Parent = MainFrame
 WeaponScroll.Size = UDim2.new(0.9, 0, 0, 45)
-WeaponScroll.Position = UDim2.new(0.05, 0, 0.13, 0)
+WeaponScroll.Position = UDim2.new(0.05, 0, 0.11, 0)
 WeaponScroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 WeaponScroll.BorderSizePixel = 0
 WeaponScroll.CanvasSize = UDim2.new(2, 0, 0, 0)
@@ -759,12 +757,26 @@ for _, name in ipairs(WeaponList) do
     end)
 end
 
--- Lista de Jogadores
+local SearchBar = Instance.new("TextBox")
+SearchBar.Parent = MainFrame
+SearchBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SearchBar.Position = UDim2.new(0.05, 0, 0.23, 0)
+SearchBar.Size = UDim2.new(0.9, 0, 0, 30)
+SearchBar.Font = Enum.Font.Gotham
+SearchBar.PlaceholderText = "Search Player..."
+SearchBar.Text = ""
+SearchBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+SearchBar.TextSize = 12
+
+local SearchCorner = Instance.new("UICorner")
+SearchCorner.CornerRadius = UDim.new(0, 4)
+SearchCorner.Parent = SearchBar
+
 local PlayerList = Instance.new("ScrollingFrame")
 PlayerList.Parent = MainFrame
 PlayerList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-PlayerList.Position = UDim2.new(0.05, 0, 0.28, 0)
-PlayerList.Size = UDim2.new(0.9, 0, 0, 130)
+PlayerList.Position = UDim2.new(0.05, 0, 0.32, 0)
+PlayerList.Size = UDim2.new(0.9, 0, 0, 160)
 PlayerList.ScrollBarThickness = 2
 PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
@@ -775,7 +787,7 @@ ListLayout.Padding = UDim.new(0, 5)
 local FireButton = Instance.new("TextButton")
 FireButton.Parent = MainFrame
 FireButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
-FireButton.Position = UDim2.new(0.05, 0, 0.72, 0)
+FireButton.Position = UDim2.new(0.05, 0, 0.74, 0)
 FireButton.Size = UDim2.new(0.9, 0, 0, 80)
 FireButton.Font = Enum.Font.GothamBold
 FireButton.Text = "FIRE"
@@ -786,14 +798,12 @@ local FireCorner = Instance.new("UICorner")
 FireCorner.CornerRadius = UDim.new(0, 10)
 FireCorner.Parent = FireButton
 
--- Alternar Visibilidade (Keybind RightShift)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
         MainFrame.Visible = not MainFrame.Visible
     end
 end)
 
--- Sistema para Arrastar (Mobile e PC)
 local Dragging, DragInput, DragStart, StartPos
 Title.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -817,13 +827,29 @@ end)
 local TargetPlayer = nil
 
 local function Populate()
-    for _, child in ipairs(PlayerList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+    for _, child in ipairs(PlayerList:GetChildren()) do 
+        if child:IsA("TextButton") then child:Destroy() end 
+    end
+    
+    local playersTable = {}
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
+            table.insert(playersTable, p)
+        end
+    end
+    
+    table.sort(playersTable, function(a, b)
+        return a.Name:lower() < b.Name:lower()
+    end)
+    
+    local filterText = SearchBar.Text:lower()
+    
+    for _, p in ipairs(playersTable) do
+        if filterText == "" or string.find(p.Name:lower(), filterText) then
             local b = Instance.new("TextButton")
             b.Parent = PlayerList
             b.Size = UDim2.new(1, -5, 0, 30)
-            b.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            b.BackgroundColor3 = (TargetPlayer == p) and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(30, 30, 30)
             b.Text = "  " .. p.Name
             b.TextColor3 = Color3.fromRGB(200, 200, 200)
             b.Font = Enum.Font.Gotham
@@ -845,17 +871,15 @@ end
 Populate()
 Players.PlayerAdded:Connect(Populate)
 Players.PlayerRemoving:Connect(Populate)
+SearchBar:GetPropertyChangedSignal("Text"):Connect(Populate)
 
--- Disparo na Posição Garantida (Sem predição)
 FireButton.InputBegan:Connect(function(input)
     if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and TargetPlayer then
-        -- Pega a posição exata no momento do clique
         if TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("Head") then
             local currentHeadPos = TargetPlayer.Character.Head.Position
             local tool = LocalPlayer.Backpack:FindFirstChild(SelectedWeapon) or LocalPlayer.Character:FindFirstChild(SelectedWeapon)
             
             if tool and tool:FindFirstChild("Fire") then
-                -- Envia a posição garantida diretamente para o Remote
                 tool.Fire:FireServer(true, currentHeadPos, false, 12)
             end
         end
