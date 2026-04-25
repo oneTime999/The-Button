@@ -1,153 +1,8 @@
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FastManualFire"
-ScreenGui.Parent = CoreGui
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -160)
-MainFrame.Size = UDim2.new(0, 250, 0, 340)
-MainFrame.Active = true
-
-local Title = Instance.new("TextLabel")
-Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Title.BorderSizePixel = 0
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "Fire"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
-
--- Seleção de Armas da Imagem
-local WeaponList = {"AK-74M", "AS-VAL", "CS5", "L106", "M27", "M4A1", "Minigun"}
-local SelectedWeapon = WeaponList[1]
-
-local WeaponScroll = Instance.new("ScrollingFrame")
-WeaponScroll.Parent = MainFrame
-WeaponScroll.Size = UDim2.new(0.9, 0, 0, 40)
-WeaponScroll.Position = UDim2.new(0.05, 0, 0.12, 0)
-WeaponScroll.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-WeaponScroll.BorderSizePixel = 0
-WeaponScroll.CanvasSize = UDim2.new(2, 0, 0, 0)
-WeaponScroll.ScrollBarThickness = 2
-
-local WeaponLayout = Instance.new("UIListLayout")
-WeaponLayout.Parent = WeaponScroll
-WeaponLayout.FillDirection = Enum.FillDirection.Horizontal
-WeaponLayout.Padding = UDim.new(0, 5)
-
-for _, name in ipairs(WeaponList) do
-    local b = Instance.new("TextButton")
-    b.Parent = WeaponScroll
-    b.Size = UDim2.new(0, 70, 1, 0)
-    b.Text = name
-    b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.Font = Enum.Font.Gotham
-    b.TextSize = 10
-    b.MouseButton1Click:Connect(function()
-        SelectedWeapon = name
-        for _, v in ipairs(WeaponScroll:GetChildren()) do
-            if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(45, 45, 45) end
-        end
-        b.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-    end)
-end
-
-local PlayerList = Instance.new("ScrollingFrame")
-PlayerList.Parent = MainFrame
-PlayerList.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-PlayerList.Position = UDim2.new(0.05, 0, 0.28, 0)
-PlayerList.Size = UDim2.new(0.9, 0, 0, 140)
-PlayerList.ScrollBarThickness = 3
-PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-
-local ListLayout = Instance.new("UIListLayout")
-ListLayout.Parent = PlayerList
-ListLayout.Padding = UDim.new(0, 4)
-
-local FireButton = Instance.new("TextButton")
-FireButton.Parent = MainFrame
-FireButton.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
-FireButton.Position = UDim2.new(0.05, 0, 0.75, 0)
-FireButton.Size = UDim2.new(0.9, 0, 0, 60)
-FireButton.Font = Enum.Font.GothamBold
-FireButton.Text = "Fire"
-FireButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FireButton.TextSize = 22
-
--- Draggable Mobile
-local Dragging, DragInput, DragStart, StartPos
-Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        Dragging = true
-        DragStart = input.Position
-        StartPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then Dragging = false end
-        end)
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local Delta = input.Position - DragStart
-        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
-    end
-end)
-
-local TargetPlayer = nil
-
-local function Populate()
-    for _, child in ipairs(PlayerList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            local b = Instance.new("TextButton")
-            b.Parent = PlayerList
-            b.Size = UDim2.new(1, 0, 0, 25)
-            b.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            b.Text = p.Name
-            b.TextColor3 = Color3.fromRGB(255, 255, 255)
-            b.Font = Enum.Font.Gotham
-            b.MouseButton1Click:Connect(function()
-                TargetPlayer = p
-                for _, v in ipairs(PlayerList:GetChildren()) do if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(35, 35, 35) end end
-                b.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-            end)
-        end
-    end
-end
-
-Populate()
-
--- Disparo Instantâneo (InputBegan é mais rápido que MouseButton1Click)
-FireButton.InputBegan:Connect(function(input)
-    if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and TargetPlayer then
-        local char = TargetPlayer.Character
-        if char and char:FindFirstChild("Head") then
-            local pos = char.Head.Position
-            local tool = LocalPlayer.Backpack:FindFirstChild(SelectedWeapon) or LocalPlayer.Character:FindFirstChild(SelectedWeapon)
-            
-            if tool and tool:FindFirstChild("Fire") then
-                tool.Fire:FireServer(true, pos, false, 999)
-            end
-        end
-    end
-end)
-
-
-
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
     Title = "Slow Hub",
-    SubTitle = "by Slow Hub Team",
+    SubTitle = "by oneTime.999",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -155,13 +10,14 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.RightShift
 })
 
-local ESPTab = Window:AddTab({ Title = "Esp", Icon = "eye" })
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
 local MiscTab = Window:AddTab({ Title = "Misc", Icon = "settings" })
 
 local Options = Fluent.Options
 
 local players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local plr = players.LocalPlayer
 
@@ -531,6 +387,34 @@ local playerESPUpdate = nil
 local ZombieESPUpdate = nil
 local ProjectESPUpdate = nil
 
+local function disableAllESPs()
+    _G.ItemESPEnabled = false
+    clearESP()
+    clearPlayerESP()
+    clearZombieESP()
+    clearProjectDeltaESP()
+    clearProjectBetaESP()
+    clearProjectAlphaESP()
+
+    if playerESPUpdate then
+        playerESPUpdate:Disconnect()
+        playerESPUpdate = nil
+    end
+    if ZombieESPUpdate then
+        ZombieESPUpdate:Disconnect()
+        ZombieESPUpdate = nil
+    end
+    if ProjectESPUpdate then
+        ProjectESPUpdate:Disconnect()
+        ProjectESPUpdate = nil
+    end
+
+    Options.ItemESP:SetValue(false)
+    Options.PlayerESP:SetValue(false)
+    Options.ZombieESP:SetValue(false)
+    Options.ProjectESP:SetValue(false)
+end
+
 ESPTab:AddToggle("ItemESP", { Title = "Items ESP", Default = false }):OnChanged(function(value)
     if value then
         for _, item in pairs(workspace:GetChildren()) do
@@ -675,6 +559,13 @@ ESPTab:AddToggle("ProjectESP", { Title = "Project ESP", Default = false }):OnCha
     end
 end)
 
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        disableAllESPs()
+    end
+end)
+
 local Noclipping = nil
 MiscTab:AddToggle("Noclip", { Title = "Noclip", Default = false }):OnChanged(function(value)
     if value then
@@ -785,6 +676,149 @@ MiscTab:AddButton({
 
 Fluent:Notify({
     Title = "Slow Hub",
-    Content = "Loaded successfully!",
+    Content = "Loaded successfully! Press K to disable all ESPs",
     Duration = 4
 })
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FastManualFire"
+ScreenGui.Parent = CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -160)
+MainFrame.Size = UDim2.new(0, 250, 0, 340)
+MainFrame.Active = true
+
+local Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Fire"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+
+-- Seleção de Armas da Imagem
+local WeaponList = {"AK-74M", "AS-VAL", "CS5", "L106", "M27", "M4A1", "Minigun"}
+local SelectedWeapon = WeaponList[1]
+
+local WeaponScroll = Instance.new("ScrollingFrame")
+WeaponScroll.Parent = MainFrame
+WeaponScroll.Size = UDim2.new(0.9, 0, 0, 40)
+WeaponScroll.Position = UDim2.new(0.05, 0, 0.12, 0)
+WeaponScroll.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+WeaponScroll.BorderSizePixel = 0
+WeaponScroll.CanvasSize = UDim2.new(2, 0, 0, 0)
+WeaponScroll.ScrollBarThickness = 2
+
+local WeaponLayout = Instance.new("UIListLayout")
+WeaponLayout.Parent = WeaponScroll
+WeaponLayout.FillDirection = Enum.FillDirection.Horizontal
+WeaponLayout.Padding = UDim.new(0, 5)
+
+for _, name in ipairs(WeaponList) do
+    local b = Instance.new("TextButton")
+    b.Parent = WeaponScroll
+    b.Size = UDim2.new(0, 70, 1, 0)
+    b.Text = name
+    b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.Gotham
+    b.TextSize = 10
+    b.MouseButton1Click:Connect(function()
+        SelectedWeapon = name
+        for _, v in ipairs(WeaponScroll:GetChildren()) do
+            if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(45, 45, 45) end
+        end
+        b.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    end)
+end
+
+local PlayerList = Instance.new("ScrollingFrame")
+PlayerList.Parent = MainFrame
+PlayerList.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+PlayerList.Position = UDim2.new(0.05, 0, 0.28, 0)
+PlayerList.Size = UDim2.new(0.9, 0, 0, 140)
+PlayerList.ScrollBarThickness = 3
+PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Parent = PlayerList
+ListLayout.Padding = UDim.new(0, 4)
+
+local FireButton = Instance.new("TextButton")
+FireButton.Parent = MainFrame
+FireButton.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+FireButton.Position = UDim2.new(0.05, 0, 0.75, 0)
+FireButton.Size = UDim2.new(0.9, 0, 0, 60)
+FireButton.Font = Enum.Font.GothamBold
+FireButton.Text = "Fire"
+FireButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FireButton.TextSize = 22
+
+-- Draggable Mobile
+local Dragging, DragInput, DragStart, StartPos
+Title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        Dragging = true
+        DragStart = input.Position
+        StartPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then Dragging = false end
+        end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local Delta = input.Position - DragStart
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
+    end
+end)
+
+local TargetPlayer = nil
+
+local function Populate()
+    for _, child in ipairs(PlayerList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local b = Instance.new("TextButton")
+            b.Parent = PlayerList
+            b.Size = UDim2.new(1, 0, 0, 25)
+            b.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            b.Text = p.Name
+            b.TextColor3 = Color3.fromRGB(255, 255, 255)
+            b.Font = Enum.Font.Gotham
+            b.MouseButton1Click:Connect(function()
+                TargetPlayer = p
+                for _, v in ipairs(PlayerList:GetChildren()) do if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(35, 35, 35) end end
+                b.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            end)
+        end
+    end
+end
+
+Populate()
+
+-- Disparo Instantâneo (InputBegan é mais rápido que MouseButton1Click)
+FireButton.InputBegan:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and TargetPlayer then
+        local char = TargetPlayer.Character
+        if char and char:FindFirstChild("Head") then
+            local pos = char.Head.Position
+            local tool = LocalPlayer.Backpack:FindFirstChild(SelectedWeapon) or LocalPlayer.Character:FindFirstChild(SelectedWeapon)
+            
+            if tool and tool:FindFirstChild("Fire") then
+                tool.Fire:FireServer(true, pos, false, 12)
+            end
+        end
+    end
+end)
