@@ -683,302 +683,178 @@ Fluent:Notify({
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- Interface
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FastManualFire"
+ScreenGui.Name = "FinalSpeedUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, -125, 0.5, -160)
 MainFrame.Size = UDim2.new(0, 250, 0, 360)
 MainFrame.Active = true
 
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Title.BorderSizePixel = 0
-Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Title.Size = UDim2.new(1, 0, 0, 40)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "High Speed Fire"
+Title.Text = "ULTRA FIRE [R-SHIFT]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
+Title.TextSize = 14
 
--- Armas
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = Title
+
+-- Lista de Armas
 local WeaponList = {"AK-74M", "AS-VAL", "CS5", "L106", "M27", "M4A1", "Minigun"}
 local SelectedWeapon = WeaponList[1]
 
 local WeaponScroll = Instance.new("ScrollingFrame")
 WeaponScroll.Parent = MainFrame
-WeaponScroll.Size = UDim2.new(0.9, 0, 0, 40)
-WeaponScroll.Position = UDim2.new(0.05, 0, 0.12, 0)
-WeaponScroll.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+WeaponScroll.Size = UDim2.new(0.9, 0, 0, 45)
+WeaponScroll.Position = UDim2.new(0.05, 0, 0.13, 0)
+WeaponScroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 WeaponScroll.BorderSizePixel = 0
-WeaponScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-WeaponScroll.ScrollBarThickness = 2
-WeaponScroll.AutomaticCanvasSize = Enum.AutomaticSize.X
+WeaponScroll.CanvasSize = UDim2.new(2, 0, 0, 0)
+WeaponScroll.ScrollBarThickness = 0
 
 local WeaponLayout = Instance.new("UIListLayout")
 WeaponLayout.Parent = WeaponScroll
 WeaponLayout.FillDirection = Enum.FillDirection.Horizontal
-WeaponLayout.Padding = UDim.new(0, 5)
+WeaponLayout.Padding = UDim.new(0, 6)
+WeaponLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
 for _, name in ipairs(WeaponList) do
     local b = Instance.new("TextButton")
     b.Parent = WeaponScroll
-    b.Size = UDim2.new(0, 70, 1, 0)
+    b.Size = UDim2.new(0, 75, 0, 30)
     b.Text = name
-    b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    b.BackgroundColor3 = (name == SelectedWeapon) and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(30, 30, 30)
     b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.Font = Enum.Font.Gotham
-    b.TextSize = 10
+    b.Font = Enum.Font.GothamMedium
+    b.TextSize = 11
+    
+    local bc = Instance.new("UICorner")
+    bc.CornerRadius = UDim.new(0, 4)
+    bc.Parent = b
+
     b.MouseButton1Click:Connect(function()
         SelectedWeapon = name
         for _, v in ipairs(WeaponScroll:GetChildren()) do
-            if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(45, 45, 45) end
+            if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
         end
-        b.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        b.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
     end)
 end
 
--- Lista de jogadores
 local PlayerList = Instance.new("ScrollingFrame")
 PlayerList.Parent = MainFrame
-PlayerList.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+PlayerList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 PlayerList.Position = UDim2.new(0.05, 0, 0.28, 0)
-PlayerList.Size = UDim2.new(0.9, 0, 0, 140)
-PlayerList.ScrollBarThickness = 3
+PlayerList.Size = UDim2.new(0.9, 0, 0, 130)
+PlayerList.ScrollBarThickness = 2
 PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local ListLayout = Instance.new("UIListLayout")
 ListLayout.Parent = PlayerList
-ListLayout.Padding = UDim.new(0, 4)
+ListLayout.Padding = UDim.new(0, 5)
 
--- Info do alvo
-local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Parent = MainFrame
-InfoLabel.Position = UDim2.new(0.05, 0, 0.68, 0)
-InfoLabel.Size = UDim2.new(0.9, 0, 0, 20)
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Alvo: Nenhum"
-InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-InfoLabel.Font = Enum.Font.Gotham
-InfoLabel.TextSize = 12
-InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
-
--- Botão de disparo
 local FireButton = Instance.new("TextButton")
 FireButton.Parent = MainFrame
-FireButton.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
-FireButton.Position = UDim2.new(0.05, 0, 0.75, 0)
-FireButton.Size = UDim2.new(0.9, 0, 0, 60)
+FireButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
+FireButton.Position = UDim2.new(0.05, 0, 0.72, 0)
+FireButton.Size = UDim2.new(0.9, 0, 0, 80)
 FireButton.Font = Enum.Font.GothamBold
-FireButton.Text = "TAP TO FIRE"
+FireButton.Text = "FIRE"
 FireButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FireButton.TextSize = 22
-FireButton.AutoButtonColor = true
+FireButton.TextSize = 30
 
--- Draggable corrigido (mobile + PC)
-local Dragging, DragStart, StartPos
-local function StartDrag(input)
+local FireCorner = Instance.new("UICorner")
+FireCorner.CornerRadius = UDim.new(0, 10)
+FireCorner.Parent = FireButton
+
+-- Toggle Visibility (Keybind)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+-- Draggable Logic
+local Dragging, DragInput, DragStart, StartPos
+Title.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         Dragging = true
         DragStart = input.Position
         StartPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                Dragging = false
-            end
-        end)
     end
-end
-
-local function UpdateDrag(input)
+end)
+UserInputService.InputChanged:Connect(function(input)
     if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local Delta = input.Position - DragStart
-        MainFrame.Position = UDim2.new(
-            StartPos.X.Scale, StartPos.X.Offset + Delta.X,
-            StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y
-        )
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
     end
-end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        Dragging = false
+    end
+end)
 
-Title.InputBegan:Connect(StartDrag)
-UserInputService.InputChanged:Connect(UpdateDrag)
-
--- Sistema de alvo
 local TargetPlayer = nil
 
-local function IsAlive(character)
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    return humanoid and humanoid.Health > 0
-end
-
-local function GetTargetPosition(character)
-    -- Pega a posição mais precisa possível
-    local head = character:FindFirstChild("Head")
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    
-    if head then
-        return head.Position
-    elseif hrp then
-        return hrp.Position
-    end
-    return nil
-end
-
-local function GetPredictedPosition(character)
-    local head = character:FindFirstChild("Head")
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    
-    if not head then return nil end
-    
-    local basePos = head.Position
-    if hrp then
-        -- Predição simples: posição atual + velocidade * tempo de viagem estimado
-        local velocity = hrp.AssemblyLinearVelocity
-        -- Ajuste o multiplicador conforme a velocidade das balas do jogo
-        local predictionMultiplier = 0.05 
-        basePos = basePos + (velocity * predictionMultiplier)
-    end
-    
-    return basePos
-end
-
-local function PopulateList()
-    -- Limpa lista
-    for _, child in ipairs(PlayerList:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    
+local function Populate()
+    for _, child in ipairs(PlayerList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
             local b = Instance.new("TextButton")
             b.Parent = PlayerList
-            b.Size = UDim2.new(1, 0, 0, 25)
-            b.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            b.Text = p.Name
-            b.TextColor3 = Color3.fromRGB(255, 255, 255)
+            b.Size = UDim2.new(1, -5, 0, 30)
+            b.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            b.Text = "  " .. p.Name
+            b.TextColor3 = Color3.fromRGB(200, 200, 200)
             b.Font = Enum.Font.Gotham
-            b.TextSize = 12
+            b.TextXAlignment = Enum.TextXAlignment.Left
             
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+
             b.MouseButton1Click:Connect(function()
                 TargetPlayer = p
-                InfoLabel.Text = "Alvo: " .. p.Name
-                for _, v in ipairs(PlayerList:GetChildren()) do
-                    if v:IsA("TextButton") then
-                        v.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-                    end
+                for _, v in ipairs(PlayerList:GetChildren()) do 
+                    if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end 
                 end
-                b.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+                b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
             end)
         end
     end
 end
 
--- Atualiza lista quando jogadores entram/saem
-Players.PlayerAdded:Connect(function()
-    task.wait(0.5)
-    PopulateList()
-end)
-Players.PlayerRemoving:Connect(PopulateList)
-PopulateList()
+Populate()
+Players.PlayerAdded:Connect(Populate)
+Players.PlayerRemoving:Connect(Populate)
 
--- Sistema de disparo corrigido
-local function FireAtTarget()
-    if not TargetPlayer then
-        InfoLabel.Text = "Alvo: Nenhum"
-        return
-    end
-    
-    local char = TargetPlayer.Character
-    if not char or not IsAlive(char) then
-        InfoLabel.Text = "Alvo: Morto/Inválido"
-        return
-    end
-    
-    -- Pega posição PREDITA (resolve o problema de alvos em movimento)
-    local pos = GetPredictedPosition(char)
-    if not pos then
-        InfoLabel.Text = "Alvo: Sem posição"
-        return
-    end
-    
-    -- Procura a arma no backpack ou character
-    local tool = LocalPlayer.Backpack:FindFirstChild(SelectedWeapon) 
-        or LocalPlayer.Character:FindFirstChild(SelectedWeapon)
-    
-    if not tool then
-        InfoLabel.Text = "Arma não encontrada: " .. SelectedWeapon
-        return
-    end
-    
-    -- Se a arma estiver no backpack, equipa automaticamente
-    if tool.Parent == LocalPlayer.Backpack and LocalPlayer.Character then
-        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid:EquipTool(tool)
-            task.wait(0.05) -- Pequeno delay para equipar
-        end
-    end
-    
-    -- Re-verifica se a arma está equipada e tem o remote
-    tool = LocalPlayer.Character:FindFirstChild(SelectedWeapon)
-    if not tool then return end
-    
-    local fireRemote = tool:FindFirstChild("Fire")
-    if not fireRemote or not fireRemote:IsA("RemoteEvent") then
-        InfoLabel.Text = "Remote 'Fire' não encontrado"
-        return
-    end
-    
-    -- Dispara com posição predita
-    -- true = segurando o botão (modo automático), pos, false, 12
-    fireRemote:FireServer(true, pos, false, 12)
-    
-    InfoLabel.Text = "Disparando em: " .. TargetPlayer.Name
-end
-
--- InputBegan para resposta instantânea
+-- Disparo Instantâneo de Alta Precisão
 FireButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch 
-        or input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and TargetPlayer then
+        local char = TargetPlayer.Character
+        local head = char and char:FindFirstChild("Head")
         
-        -- Evita disparo acidental durante drag
-        if Dragging then return end
-        
-        FireAtTarget()
-    end
-end)
-
--- Atalho de teclado (opcional) - tecla F
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.F and TargetPlayer then
-        FireAtTarget()
-    end
-end)
-
--- Auto-limpar alvo se ele morrer/sair
-task.spawn(function()
-    while true do
-        task.wait(1)
-        if TargetPlayer then
-            if not TargetPlayer.Parent or not TargetPlayer.Character or not IsAlive(TargetPlayer.Character) then
-                TargetPlayer = nil
-                InfoLabel.Text = "Alvo: Nenhum"
-                for _, v in ipairs(PlayerList:GetChildren()) do
-                    if v:IsA("TextButton") then
-                        v.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-                    end
-                end
+        if head then
+            local pos = head.Position
+            local tool = LocalPlayer.Backpack:FindFirstChild(SelectedWeapon) or LocalPlayer.Character:FindFirstChild(SelectedWeapon)
+            
+            if tool and tool:FindFirstChild("Fire") then
+                tool.Fire:FireServer(true, pos, false, 999)
             end
         end
     end
