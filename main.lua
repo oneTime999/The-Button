@@ -2,7 +2,7 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 
 local Window = Fluent:CreateWindow({
     Title = "Slow Hub",
-    SubTitle = "by oneTime.999",
+    SubTitle = "by Slow Hub Team",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
