@@ -683,6 +683,7 @@ Fluent:Notify({
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -692,41 +693,56 @@ ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -200)
-MainFrame.Size = UDim2.new(0, 260, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -220)
+MainFrame.Size = UDim2.new(0, 300, 0, 480)
 MainFrame.Active = true
 MainFrame.Visible = true
 
 local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+Title.Size = UDim2.new(1, 0, 0, 38)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "DIRECT HIT [R-SHIFT]"
+Title.Text = "DIRECT HIT  [R-SHIFT]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
+Title.TextSize = 13
 
 local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.CornerRadius = UDim.new(0, 10)
 TitleCorner.Parent = Title
 
 local WeaponList = {"AK-74M", "AS-VAL", "CS5", "L106", "M27", "M4A1", "Minigun"}
 local SelectedWeapon = WeaponList[1]
 
+local WeaponLabel = Instance.new("TextLabel")
+WeaponLabel.Parent = MainFrame
+WeaponLabel.BackgroundTransparency = 1
+WeaponLabel.Position = UDim2.new(0.05, 0, 0.09, 0)
+WeaponLabel.Size = UDim2.new(0.9, 0, 0, 18)
+WeaponLabel.Font = Enum.Font.GothamMedium
+WeaponLabel.Text = "WEAPON"
+WeaponLabel.TextColor3 = Color3.fromRGB(120, 120, 140)
+WeaponLabel.TextSize = 10
+WeaponLabel.TextXAlignment = Enum.TextXAlignment.Left
+
 local WeaponScroll = Instance.new("ScrollingFrame")
 WeaponScroll.Parent = MainFrame
-WeaponScroll.Size = UDim2.new(0.9, 0, 0, 45)
-WeaponScroll.Position = UDim2.new(0.05, 0, 0.11, 0)
-WeaponScroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+WeaponScroll.Size = UDim2.new(0.9, 0, 0, 40)
+WeaponScroll.Position = UDim2.new(0.05, 0, 0.14, 0)
+WeaponScroll.BackgroundColor3 = Color3.fromRGB(22, 22, 25)
 WeaponScroll.BorderSizePixel = 0
 WeaponScroll.CanvasSize = UDim2.new(2, 0, 0, 0)
 WeaponScroll.ScrollBarThickness = 0
+
+local WeaponCorner = Instance.new("UICorner")
+WeaponCorner.CornerRadius = UDim.new(0, 6)
+WeaponCorner.Parent = WeaponScroll
 
 local WeaponLayout = Instance.new("UIListLayout")
 WeaponLayout.Parent = WeaponScroll
@@ -734,75 +750,156 @@ WeaponLayout.FillDirection = Enum.FillDirection.Horizontal
 WeaponLayout.Padding = UDim.new(0, 6)
 WeaponLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
+local WeaponButtons = {}
 for _, name in ipairs(WeaponList) do
     local b = Instance.new("TextButton")
     b.Parent = WeaponScroll
-    b.Size = UDim2.new(0, 75, 0, 30)
+    b.Size = UDim2.new(0, 70, 0, 28)
     b.Text = name
-    b.BackgroundColor3 = (name == SelectedWeapon) and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(30, 30, 30)
-    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.BackgroundColor3 = (name == SelectedWeapon) and Color3.fromRGB(0, 140, 255) or Color3.fromRGB(35, 35, 40)
+    b.TextColor3 = Color3.fromRGB(220, 220, 220)
     b.Font = Enum.Font.GothamMedium
-    b.TextSize = 11
+    b.TextSize = 10
     
     local bc = Instance.new("UICorner")
-    bc.CornerRadius = UDim.new(0, 4)
+    bc.CornerRadius = UDim.new(0, 5)
     bc.Parent = b
 
     b.MouseButton1Click:Connect(function()
         SelectedWeapon = name
-        for _, v in ipairs(WeaponScroll:GetChildren()) do
-            if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
+        for _, btn in pairs(WeaponButtons) do
+            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
         end
-        b.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+        b.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
     end)
+    
+    table.insert(WeaponButtons, b)
 end
+
+local AimMode = "Head"
+
+local PartLabel = Instance.new("TextLabel")
+PartLabel.Parent = MainFrame
+PartLabel.BackgroundTransparency = 1
+PartLabel.Position = UDim2.new(0.05, 0, 0.22, 0)
+PartLabel.Size = UDim2.new(0.9, 0, 0, 18)
+PartLabel.Font = Enum.Font.GothamMedium
+PartLabel.Text = "TARGET PART"
+PartLabel.TextColor3 = Color3.fromRGB(120, 120, 140)
+PartLabel.TextSize = 10
+PartLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local PartFrame = Instance.new("Frame")
+PartFrame.Parent = MainFrame
+PartFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 25)
+PartFrame.Position = UDim2.new(0.05, 0, 0.27, 0)
+PartFrame.Size = UDim2.new(0.9, 0, 0, 34)
+
+local PartCorner = Instance.new("UICorner")
+PartCorner.CornerRadius = UDim.new(0, 6)
+PartCorner.Parent = PartFrame
+
+local HeadButton = Instance.new("TextButton")
+HeadButton.Parent = PartFrame
+HeadButton.Size = UDim2.new(0.5, -2, 1, 0)
+HeadButton.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
+HeadButton.Text = "HEAD"
+HeadButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HeadButton.Font = Enum.Font.GothamBold
+HeadButton.TextSize = 12
+
+local HeadCorner = Instance.new("UICorner")
+HeadCorner.CornerRadius = UDim.new(0, 6)
+HeadCorner.Parent = HeadButton
+
+local TorsoButton = Instance.new("TextButton")
+TorsoButton.Parent = PartFrame
+TorsoButton.Position = UDim2.new(0.5, 2, 0, 0)
+TorsoButton.Size = UDim2.new(0.5, -2, 1, 0)
+TorsoButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+TorsoButton.Text = "TORSO"
+TorsoButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+TorsoButton.Font = Enum.Font.GothamBold
+TorsoButton.TextSize = 12
+
+local TorsoCorner = Instance.new("UICorner")
+TorsoCorner.CornerRadius = UDim.new(0, 6)
+TorsoCorner.Parent = TorsoButton
+
+HeadButton.MouseButton1Click:Connect(function()
+    AimMode = "Head"
+    HeadButton.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
+    HeadButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TorsoButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    TorsoButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+end)
+
+TorsoButton.MouseButton1Click:Connect(function()
+    AimMode = "Torso"
+    TorsoButton.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
+    TorsoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HeadButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    HeadButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+end)
 
 local SearchBar = Instance.new("TextBox")
 SearchBar.Parent = MainFrame
-SearchBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-SearchBar.Position = UDim2.new(0.05, 0, 0.23, 0)
+SearchBar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+SearchBar.Position = UDim2.new(0.05, 0, 0.34, 0)
 SearchBar.Size = UDim2.new(0.9, 0, 0, 30)
 SearchBar.Font = Enum.Font.Gotham
-SearchBar.PlaceholderText = "Search Player..."
+SearchBar.PlaceholderText = "Search player..."
 SearchBar.Text = ""
-SearchBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+SearchBar.TextColor3 = Color3.fromRGB(200, 200, 200)
 SearchBar.TextSize = 12
+SearchBar.ClearTextOnFocus = false
 
 local SearchCorner = Instance.new("UICorner")
-SearchCorner.CornerRadius = UDim.new(0, 4)
+SearchCorner.CornerRadius = UDim.new(0, 6)
 SearchCorner.Parent = SearchBar
 
 local PlayerList = Instance.new("ScrollingFrame")
 PlayerList.Parent = MainFrame
-PlayerList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-PlayerList.Position = UDim2.new(0.05, 0, 0.32, 0)
-PlayerList.Size = UDim2.new(0.9, 0, 0, 160)
-PlayerList.ScrollBarThickness = 2
+PlayerList.BackgroundColor3 = Color3.fromRGB(22, 22, 25)
+PlayerList.Position = UDim2.new(0.05, 0, 0.41, 0)
+PlayerList.Size = UDim2.new(0.9, 0, 0, 140)
+PlayerList.ScrollBarThickness = 3
+PlayerList.ScrollBarImageColor3 = Color3.fromRGB(0, 140, 255)
 PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+PlayerList.BorderSizePixel = 0
+
+local PlayerListCorner = Instance.new("UICorner")
+PlayerListCorner.CornerRadius = UDim.new(0, 6)
+PlayerListCorner.Parent = PlayerList
 
 local ListLayout = Instance.new("UIListLayout")
 ListLayout.Parent = PlayerList
-ListLayout.Padding = UDim.new(0, 5)
+ListLayout.Padding = UDim.new(0, 4)
 
 local FireButton = Instance.new("TextButton")
 FireButton.Parent = MainFrame
 FireButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
 FireButton.Position = UDim2.new(0.05, 0, 0.74, 0)
-FireButton.Size = UDim2.new(0.9, 0, 0, 80)
+FireButton.Size = UDim2.new(0.9, 0, 0, 55)
 FireButton.Font = Enum.Font.GothamBold
 FireButton.Text = "FIRE"
 FireButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FireButton.TextSize = 30
+FireButton.TextSize = 22
 
 local FireCorner = Instance.new("UICorner")
-FireCorner.CornerRadius = UDim.new(0, 10)
+FireCorner.CornerRadius = UDim.new(0, 8)
 FireCorner.Parent = FireButton
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
-        MainFrame.Visible = not MainFrame.Visible
-    end
-end)
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0.05, 0, 0.865, 0)
+StatusLabel.Size = UDim2.new(0.9, 0, 0, 16)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "Ready"
+StatusLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
+StatusLabel.TextSize = 10
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
 
 local Dragging, DragInput, DragStart, StartPos
 Title.InputBegan:Connect(function(input)
@@ -815,12 +912,21 @@ end)
 UserInputService.InputChanged:Connect(function(input)
     if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local Delta = input.Position - DragStart
-        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
+        MainFrame.Position = UDim2.new(
+            StartPos.X.Scale, StartPos.X.Offset + Delta.X,
+            StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y
+        )
     end
 end)
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         Dragging = false
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+        MainFrame.Visible = not MainFrame.Visible
     end
 end)
 
@@ -845,24 +951,31 @@ local function Populate()
     local filterText = SearchBar.Text:lower()
     
     for _, p in ipairs(playersTable) do
-        if filterText == "" or string.find(p.Name:lower(), filterText) then
+        if filterText == "" or string.find(p.Name:lower(), filterText, 1, true) then
             local b = Instance.new("TextButton")
             b.Parent = PlayerList
-            b.Size = UDim2.new(1, -5, 0, 30)
-            b.BackgroundColor3 = (TargetPlayer == p) and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(30, 30, 30)
-            b.Text = "  " .. p.Name
-            b.TextColor3 = Color3.fromRGB(200, 200, 200)
+            b.Size = UDim2.new(1, -5, 0, 28)
+            b.BackgroundColor3 = (TargetPlayer == p) and Color3.fromRGB(0, 100, 200) or Color3.fromRGB(35, 35, 40)
+            b.Text = "  " .. p.Name .. "  [" .. math.floor(p:DistanceFromCharacter(LocalPlayer.Character and LocalPlayer.Character.PrimaryPart and LocalPlayer.Character.PrimaryPart.Position or Vector3.new())) .. "m]"
+            b.TextColor3 = Color3.fromRGB(220, 220, 220)
             b.Font = Enum.Font.Gotham
             b.TextXAlignment = Enum.TextXAlignment.Left
+            b.TextSize = 11
             
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+            local bc = Instance.new("UICorner")
+            bc.CornerRadius = UDim.new(0, 4)
+            bc.Parent = b
 
             b.MouseButton1Click:Connect(function()
                 TargetPlayer = p
                 for _, v in ipairs(PlayerList:GetChildren()) do 
-                    if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end 
+                    if v:IsA("TextButton") then 
+                        v.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+                    end 
                 end
-                b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+                b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+                StatusLabel.Text = "Target: " .. p.Name .. " (" .. AimMode .. ")"
+                StatusLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
             end)
         end
     end
@@ -873,15 +986,100 @@ Players.PlayerAdded:Connect(Populate)
 Players.PlayerRemoving:Connect(Populate)
 SearchBar:GetPropertyChangedSignal("Text"):Connect(Populate)
 
-FireButton.InputBegan:Connect(function(input)
-    if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and TargetPlayer then
-        if TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("Head") then
-            local currentHeadPos = TargetPlayer.Character.Head.Position
-            local tool = LocalPlayer.Backpack:FindFirstChild(SelectedWeapon) or LocalPlayer.Character:FindFirstChild(SelectedWeapon)
-            
-            if tool and tool:FindFirstChild("Fire") then
-                tool.Fire:FireServer(true, currentHeadPos, false, 12)
+RunService.Heartbeat:Connect(function()
+    if TargetPlayer and LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
+        local filterText = SearchBar.Text:lower()
+        for _, b in ipairs(PlayerList:GetChildren()) do
+            if b:IsA("TextButton") then
+                local playerName = b.Text:match("^%s*(%S+)")
+                if playerName then
+                    local p = Players:FindFirstChild(playerName)
+                    if p and p.Character and p.Character.PrimaryPart then
+                        local dist = math.floor((p.Character.PrimaryPart.Position - LocalPlayer.Character.PrimaryPart.Position).Magnitude)
+                        b.Text = "  " .. p.Name .. "  [" .. dist .. "m]"
+                    end
+                end
             end
         end
+    end
+end)
+
+local function GetTargetPosition(targetPlayer)
+    if not targetPlayer.Character then return nil end
+    
+    local targetPart = nil
+    if AimMode == "Head" then
+        targetPart = targetPlayer.Character:FindFirstChild("Head")
+    else
+        targetPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+            or targetPlayer.Character:FindFirstChild("Torso")
+            or targetPlayer.Character:FindFirstChild("UpperTorso")
+    end
+    
+    if not targetPart then
+        targetPart = targetPlayer.Character:FindFirstChild("Head")
+            or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    end
+    
+    if targetPart then
+        return targetPart.Position
+    end
+    
+    return nil
+end
+
+local function ExecuteFire()
+    if not TargetPlayer then
+        StatusLabel.Text = "No target selected!"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    if not TargetPlayer.Character or not TargetPlayer.Character.Parent then
+        StatusLabel.Text = "Target character not found!"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local targetPos = GetTargetPosition(TargetPlayer)
+    if not targetPos then
+        StatusLabel.Text = "Could not find target part (" .. AimMode .. ")"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local tool = LocalPlayer.Backpack:FindFirstChild(SelectedWeapon) 
+                or LocalPlayer.Character:FindFirstChild(SelectedWeapon)
+    
+    if not tool then
+        StatusLabel.Text = "Weapon not found: " .. SelectedWeapon
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local fireEvent = tool:FindFirstChild("Fire")
+    if not fireEvent then
+        StatusLabel.Text = "No Fire event on " .. SelectedWeapon
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local success, errorMsg = pcall(function()
+        fireEvent:FireServer(true, targetPos, (AimMode == "Head"), 12)
+    end)
+    
+    if success then
+        StatusLabel.Text = "Shot fired at " .. TargetPlayer.Name .. " (" .. AimMode .. ")"
+        StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        StatusLabel.Text = "FireServer error: " .. tostring(errorMsg)
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end
+
+FireButton.InputBegan:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.Touch or 
+        input.UserInputType == Enum.UserInputType.MouseButton1) then
+        ExecuteFire()
     end
 end)
